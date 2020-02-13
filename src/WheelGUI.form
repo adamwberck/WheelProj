@@ -35,56 +35,7 @@
                   <preferredSize width="250" height="250"/>
                 </properties>
                 <border type="none"/>
-                <children>
-                  <grid id="88539" binding="Entry1" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
-                    <constraints/>
-                    <properties>
-                      <foreground color="-12434878"/>
-                      <opaque value="false"/>
-                    </properties>
-                    <border type="none"/>
-                    <children>
-                      <component id="9f9c" class="javax.swing.JTextField" binding="tfName1">
-                        <constraints/>
-                        <properties>
-                          <columns value="15"/>
-                          <foreground color="-12434878"/>
-                        </properties>
-                      </component>
-                      <component id="d8f37" class="javax.swing.JTextField" binding="tfNum1">
-                        <constraints/>
-                        <properties>
-                          <columns value="5"/>
-                          <foreground color="-12434878"/>
-                        </properties>
-                      </component>
-                    </children>
-                  </grid>
-                  <grid id="33a4d" binding="Entry2" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
-                    <constraints/>
-                    <properties>
-                      <foreground color="-12434878"/>
-                      <opaque value="false"/>
-                    </properties>
-                    <border type="none"/>
-                    <children>
-                      <component id="82502" class="javax.swing.JTextField" binding="tfName2">
-                        <constraints/>
-                        <properties>
-                          <columns value="15"/>
-                          <foreground color="-12434878"/>
-                        </properties>
-                      </component>
-                      <component id="ac011" class="javax.swing.JTextField" binding="tfNum2">
-                        <constraints/>
-                        <properties>
-                          <columns value="5"/>
-                          <foreground color="-12434878"/>
-                        </properties>
-                      </component>
-                    </children>
-                  </grid>
-                </children>
+                <children/>
               </grid>
             </children>
           </scrollpane>
