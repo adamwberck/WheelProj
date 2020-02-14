@@ -59,16 +59,6 @@
           </grid>
         </children>
       </grid>
-      <grid id="7dbd9" binding="RightPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
-        <constraints/>
-        <properties>
-          <background color="-12434878"/>
-          <foreground color="-12434878"/>
-          <preferredSize width="350" height="300"/>
-        </properties>
-        <border type="line"/>
-        <children/>
-      </grid>
     </children>
   </grid>
 </form>

@@ -1,13 +1,29 @@
 public class WheelEntry {
-    String name;
-    int weight;
+    private Wheel wheel;
+    private String name;
+    private int weight;
 
-    public WheelEntry(String name, int weight) {
-        this.name = name;
-        this.weight = weight;
+    public int getAngle() {
+        return angle;
     }
 
-    public double getWeight() {
-        return weight*1.0;
+    private int angle;
+
+    public WheelEntry(Wheel wheel,String name, int weight) {
+        this.name = name;
+        this.weight = weight;
+        this.wheel = wheel;
+    }
+
+    public void setAngle(int angle) {
+        this.angle = angle;
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public String getName() {
+        return name;
     }
 }

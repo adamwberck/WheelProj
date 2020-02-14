@@ -44,38 +44,44 @@ public class EntryPanel extends JPanel {
         remove.setBorder(BorderFactory.createEmptyBorder());
         remove.setBackground(new Color(60,63,65));
         remove.setSize(25,25);
-        tfNum.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                warn();
-            }
+        tfName.getDocument().addDocumentListener(new EntryDocumentListener());
+        tfNum.getDocument().addDocumentListener(new EntryDocumentListener());
+    }
 
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                warn();
-            }
+    private class EntryDocumentListener implements DocumentListener{
 
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                warn();
-            }
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            warn();
+        }
 
-            public void warn() {
-                try {
-                    weight = Integer.parseInt(tfNum.getText().trim());
-                    name = tfName.getText().trim();
-                    if(!name.isEmpty()){
-                        wheelGUI.updateWheel();
-                        isSet = true;
-                    }else{
-                        isSet = false;
-                    }
-                }
-                catch (NumberFormatException ignored){}
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            warn();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            warn();
+        }
+
+        public void warn() {
+            try {
+                weight = Integer.parseInt(tfNum.getText().trim());
+                name = tfName.getText().trim();
+                isSet = true;
+            }
+            catch (NumberFormatException ignored){
+            }
+            if(tfNum.getText().isEmpty() && tfName.getText().isEmpty()) {
                 isSet = false;
             }
-
-        });
+            else if(tfNum.getText().isEmpty()){
+                weight = 0;
+                isSet = true;
+            }
+            wheelGUI.updateWheel();
+        }
     }
 
     public boolean isSet() {

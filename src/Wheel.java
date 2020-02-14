@@ -24,8 +24,23 @@ public class Wheel {
     }
 
     public void addEntry(String name, int weight){
-        entries.add(new WheelEntry(name,weight));
+        entries.add(new WheelEntry(this,name,weight));
         total+=weight;
+    }
+
+    public int getAngle(int i){
+        int totalAngle = 0;
+        for(WheelEntry entry : entries){
+            int angle = (int) (((entry.getWeight()*1.0) / (total*1.0))*360);
+            entry.setAngle(angle);
+            totalAngle+=angle;
+        }
+        while(totalAngle<360){
+            int angle = entries.get(0).getAngle();
+            entries.get(0).setAngle(angle+1);
+            totalAngle++;
+        }
+        return entries.get(i).getAngle();
     }
 
     public double getTotal() {
