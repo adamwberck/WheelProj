@@ -72,15 +72,11 @@ public class WheelPanel extends JPanel implements Runnable{
             lines.add(Line.drawLineLater(ox,oy, rx,ry));
 
             rads = Math.toRadians(-angle - sAngle*.5 );
-            AffineTransform orig = g2d.getTransform();
-            g2d.setFont(tahoma);
-            g2d.setColor(Color.BLACK);
-            g2d.rotate(rads,ox,oy);
-            String s = entry.getName();
-            g2d.drawString(s, (int) (ox+SIZE/2.0833-getFontMetrics(tahoma).stringWidth(s)),oy+SIZE/50);
-            g2d.setTransform(orig);
+            if(entry.getWeight()>0) {
+                drawText(g2d, entry.getName(), ox, oy, rads, Color.BLACK);
+            }
 
-        angle += sAngle;
+            angle += sAngle;
         angle = angle%360;
         }
 
@@ -93,6 +89,15 @@ public class WheelPanel extends JPanel implements Runnable{
 
         drawSpoke(g2d, ox, oy);
         drawTriangle(g2d);
+    }
+
+    private void drawText(Graphics2D g2d,String text, int ox, int oy, double rads,Color color) {
+        AffineTransform orig = g2d.getTransform();
+        g2d.setFont(tahoma);
+        g2d.setColor(color);
+        g2d.rotate(rads,ox,oy);
+        g2d.drawString(text, (int) (ox+SIZE/2.0833-getFontMetrics(tahoma).stringWidth(text)),oy+SIZE/50);
+        g2d.setTransform(orig);
     }
 
 
