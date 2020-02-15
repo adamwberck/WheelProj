@@ -1,24 +1,24 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.util.ArrayList;
 
 public class WheelPanel extends JPanel implements Runnable{
-    private static final Font tahoma = new Font("Tahoma", Font.BOLD, 11);
-    private static final int SIZE = 250;
+    private static final Font tahoma = new Font("Tahoma", Font.BOLD, 13);
+    private static final int SIZE = 450;
     private static final int BORDER_SIZE = (int) (SIZE/12.5);
-    private final int INITIAL_X = (int) (SIZE/7.14287);
+    private final int INITIAL_X = 25;//(int) (SIZE/7.14287);
     private final int INITIAL_Y = (int) (SIZE/16.6666667);
     private final int DELAY = 25;
 
     private int x,y;
     private double spinAngle = 0;
-    private double spinSpd = 0;
+    private double spinSpeed = 0;
+    private double spinFriction = 0.1;
     private Thread animator;
     private Wheel wheel;
+    private boolean isSpinning;
 
     public WheelPanel(Wheel wheel) {
         initWheelPanel();
@@ -53,7 +53,7 @@ public class WheelPanel extends JPanel implements Runnable{
 
         Color b = Color.BLACK;
         Color[] colors = wheel.getColors();
-        int angle = 180;
+        int angle = (int) ((180+spinAngle) % 360);
         //draw black border
         g2d.setColor(b);
         g2d.fillArc(x, y, SIZE +BORDER_SIZE, SIZE +BORDER_SIZE, 0, 360 );
@@ -77,7 +77,7 @@ public class WheelPanel extends JPanel implements Runnable{
             }
 
             angle += sAngle;
-        angle = angle%360;
+            angle = angle%360;
         }
 
         g2d.setStroke(new BasicStroke(2));
@@ -93,10 +93,17 @@ public class WheelPanel extends JPanel implements Runnable{
 
     private void drawText(Graphics2D g2d,String text, int ox, int oy, double rads,Color color) {
         AffineTransform orig = g2d.getTransform();
-        g2d.setFont(tahoma);
-        g2d.setColor(color);
+        BufferedImage bi  = new BufferedImage( SIZE/2,50,BufferedImage.TYPE_4BYTE_ABGR);
+        Graphics2D g2 = bi.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        g2.setFont(tahoma);
+        g2.setColor(color);
+        g2.drawString(text,SIZE/2-getFontMetrics(tahoma).stringWidth(text)-SIZE/45,25);
+        //g2.drawString(text, (int) (),SIZE/50);
         g2d.rotate(rads,ox,oy);
-        g2d.drawString(text, (int) (ox+SIZE/2.0833-getFontMetrics(tahoma).stringWidth(text)),oy+SIZE/50);
+
+        g2d.drawImage(bi,ox, (int) (oy-SIZE/22.5),this);
+
         g2d.setTransform(orig);
     }
 
@@ -118,13 +125,29 @@ public class WheelPanel extends JPanel implements Runnable{
         Polygon triangle = new Polygon();
         int adjy = (int) (SIZE/2.0325203252);
         int adjx = SIZE/10;
-        int x1 = (int) (250/19.230769), x2 = (int) (250/9.6153846);
-        int y2 = (int) (250/20.8333), y1 = (int) (250/10.41666667);
+        int x1 = (int) (SIZE/19.230769), x2 = (int) (SIZE/9.6153846);
+        int y2 = (int) (SIZE/20.8333), y1 = (int) (SIZE/10.41666667);
         g2d.setColor(Color.BLACK);
         triangle.addPoint(x+SIZE+BORDER_SIZE+adjx-x1,y+adjy);
         triangle.addPoint(x+SIZE+BORDER_SIZE+adjx-x1,y+y1+adjy);
         triangle.addPoint(x+SIZE+BORDER_SIZE+adjx-x2,y+y2+adjy);
         g2d.fillPolygon(triangle);
+    }
+
+    public void setSpinSpeed(double spinSpeed) {
+        this.spinSpeed = spinSpeed;
+    }
+
+    public double getSpinSpeed() {
+        return spinSpeed;
+    }
+
+    public void setSpinning(boolean isSpinning) {
+        this.isSpinning = isSpinning;
+    }
+
+    public boolean isSpining() {
+        return isSpinning;
     }
 
     private static class Line{
@@ -161,7 +184,12 @@ public class WheelPanel extends JPanel implements Runnable{
 
             timeDiff = System.currentTimeMillis() - beforeTime;
             sleep = DELAY - timeDiff;
-
+            spinAngle += spinSpeed;
+            spinAngle = spinAngle % 360;
+            spinSpeed = Math.max(0, spinSpeed -spinFriction);
+            if(spinSpeed == 0 && isSpinning){
+                //TODO detect result
+            }
             if (sleep < 0) {
                 sleep = 2;
             }

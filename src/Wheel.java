@@ -9,7 +9,7 @@ public class Wheel {
     }
 
     private List<WheelEntry> entries = new ArrayList(10);
-    private Color[] colors = {Color.CYAN,Color.green,Color.ORANGE,Color.PINK,Color.YELLOW,Color.red};
+    private Color[] colors = {Color.CYAN,Color.green,Color.ORANGE,Color.PINK,Color.YELLOW,Color.red,Color.green,Color.ORANGE,Color.PINK,Color.YELLOW,Color.red};
     private int total = 0;
     public Color[] getColors() {
         return colors;

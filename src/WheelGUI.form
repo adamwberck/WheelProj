@@ -23,7 +23,7 @@
               <enabled value="true"/>
               <foreground color="-12434878"/>
               <opaque value="false"/>
-              <preferredSize width="275" height="510"/>
+              <preferredSize width="275" height="550"/>
             </properties>
             <border type="empty"/>
             <children>
@@ -32,31 +32,13 @@
                 <properties>
                   <foreground color="-12434878"/>
                   <opaque value="true"/>
-                  <preferredSize width="250" height="250"/>
+                  <preferredSize width="250" height="10"/>
                 </properties>
                 <border type="none"/>
                 <children/>
               </grid>
             </children>
           </scrollpane>
-          <grid id="4399b" binding="ButtonPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
-            <constraints/>
-            <properties>
-              <opaque value="false"/>
-            </properties>
-            <border type="none"/>
-            <children>
-              <component id="1b333" class="javax.swing.JButton" binding="Add">
-                <constraints/>
-                <properties>
-                  <focusPainted value="true"/>
-                  <focusable value="false"/>
-                  <foreground color="-12434878"/>
-                  <text value="Add"/>
-                </properties>
-              </component>
-            </children>
-          </grid>
         </children>
       </grid>
     </children>
