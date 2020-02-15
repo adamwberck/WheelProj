@@ -13,7 +13,7 @@
         <constraints/>
         <properties>
           <opaque value="false"/>
-          <preferredSize width="275" height="300"/>
+          <preferredSize width="275" height="550"/>
         </properties>
         <border type="none"/>
         <children>
@@ -23,7 +23,7 @@
               <enabled value="true"/>
               <foreground color="-12434878"/>
               <opaque value="false"/>
-              <preferredSize width="275" height="260"/>
+              <preferredSize width="275" height="510"/>
             </properties>
             <border type="empty"/>
             <children>

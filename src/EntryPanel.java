@@ -12,6 +12,7 @@ public class EntryPanel extends JPanel {
     private JTextField tfNum = new JTextField();
     private JButton remove = new JButton();
     private boolean isSet = false;
+    private String name;
     private int weight;
 
     public int getWeight() {
@@ -23,7 +24,7 @@ public class EntryPanel extends JPanel {
         return name;
     }
 
-    private String name;
+
 
     public EntryPanel(WheelGUI wheelGUI) {
         this.wheelGUI = wheelGUI;
@@ -66,9 +67,9 @@ public class EntryPanel extends JPanel {
         }
 
         public void warn() {
+            name = tfName.getText().trim();
             try {
                 weight = Integer.parseInt(tfNum.getText().trim());
-                name = tfName.getText().trim();
                 isSet = true;
             }
             catch (NumberFormatException ignored){
@@ -76,8 +77,8 @@ public class EntryPanel extends JPanel {
             if(tfNum.getText().isEmpty() && tfName.getText().isEmpty()) {
                 isSet = false;
             }
-            else if(tfNum.getText().isEmpty()){
-                weight = 0;
+            else if(tfNum.getText().isEmpty()){//just num empty assume its 1
+                weight = 1;
                 isSet = true;
             }
             wheelGUI.updateWheel();

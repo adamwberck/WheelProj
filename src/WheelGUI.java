@@ -34,7 +34,8 @@ public class WheelGUI extends JFrame{
         Add.setBackground( new Color(59,149,182));
         Add.setForeground( Color.BLACK);
         Add.setFont(tahoma);
-        RightPanel.setPreferredSize(new Dimension(325,300));
+        RightPanel.setPreferredSize(new Dimension(ParLeftPanel.getPreferredSize().height,
+                ParLeftPanel.getPreferredSize().height));
         MainPanel.add(RightPanel);
     }
 
