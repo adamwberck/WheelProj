@@ -83,6 +83,28 @@ public class EntryPanel extends JPanel {
         return  bi;
     }
 
+    public void setText(String s) {
+        tfName.setText(s);
+    }
+
+    public void notifyChosen() {
+        tfName.setBackground(Color.YELLOW);
+        tfNum.setBackground(Color.YELLOW);
+        tfName.revalidate();
+        tfName.repaint();
+        tfNum.revalidate();
+        tfNum.repaint();
+    }
+
+    public void notifyUnChosen() {
+        tfName.setBackground(Color.WHITE);
+        tfNum.setBackground(Color.WHITE);
+        tfName.revalidate();
+        tfName.repaint();
+        tfNum.revalidate();
+        tfNum.repaint();
+    }
+
     private class EntryDocumentListener implements DocumentListener{
         private JTextField textField;
 

@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class WheelGUI extends JFrame{
     private Wheel wheel = new Wheel();
@@ -26,11 +27,12 @@ public class WheelGUI extends JFrame{
         //MainPanel.setForeground(Color.black);
         //LeftPanel.setForeground(Color.darkGray);
         LeftPanel.setBackground(Color.darkGray);
-        final Font tahoma = new Font("Tahoma", Font.BOLD, 12);
+        //Font tahoma = new Font("Tahoma", Font.BOLD, 12);
         int w = 0;
         for(int i=0;i<6;i++){
             EntryPanel panel = new EntryPanel(this,Color.WHITE);
             entryPanels.add(panel);
+            panel.setText(i+"");
             w = panel.getPreferredSize().width;
             LeftPanel.add(panel);
             adjustHeight(panel,true);
@@ -67,37 +69,47 @@ public class WheelGUI extends JFrame{
         MainPanel.add(RightPanel);
 
         RightPanel.addMouseListener(new MouseListener() {
+
             @Override
             public void mouseClicked(MouseEvent e) {
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                spin();
+                if(SwingUtilities.isLeftMouseButton(e)) {
+                    spin();
+                    RightPanel.setGrabbed(true);
+                    RightPanel.setMousePos(e.getX(), e.getY());
+                }else if(SwingUtilities.isRightMouseButton(e)){
+                    quickSpin();
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-
+                RightPanel.setGrabbed(false);
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-
+                RightPanel.setGrabbed(false);
             }
         });
     }
+    private void quickSpin(){
+        RightPanel.setSpinSpeed((new Random().nextDouble()*35+10)*(new Random().nextBoolean() ?  1: -1 ));
+        spin();
+    }
+
 
     private void spin() {
-        if(RightPanel.getSpinSpeed()==0){
-            //TODO DRAG SPIN
-            RightPanel.setSpinSpeed(25);
-            RightPanel.setSpinning(true);
+        RightPanel.resetChosen();
+        for(EntryPanel panel : entryPanels){
+            panel.notifyUnChosen();
         }
     }
 
@@ -118,8 +130,9 @@ public class WheelGUI extends JFrame{
     public void updateWheel() {
         wheel.clearEntries();
         for(EntryPanel panel : entryPanels){
+            panel.notifyUnChosen();
             if(panel.isSet()){
-                wheel.addEntry(panel.getName(),panel.getWeight());
+                wheel.addEntry(panel,panel.getName(),panel.getWeight());
             }
         }
     }
