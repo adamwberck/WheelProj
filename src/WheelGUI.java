@@ -1,45 +1,62 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class WheelGUI extends JFrame{
-    private Wheel wheel = new Wheel();
+    private Wheel wheel;
 
     private JPanel MainPanel;
     private JScrollPane ScrollPane;
     private List<EntryPanel> entryPanels = new ArrayList(10);
     private JPanel LeftPanel;
-    private WheelPanel RightPanel = new WheelPanel(wheel);
+    private WheelPanel RightPanel;
     private JPanel ParLeftPanel;
     private JButton Add = new JButton();
     private JPanel AddPanel;
 
+    private final static String FILE_NAME = "wheel_save.wheel";;
 
-    public WheelGUI() {
-        setContentPane(MainPanel);
-        MainPanel.setBackground(Color.black);
-        //MainPanel.setForeground(Color.black);
-        //LeftPanel.setForeground(Color.darkGray);
-        LeftPanel.setBackground(Color.darkGray);
-        //Font tahoma = new Font("Tahoma", Font.BOLD, 12);
-        int w = 0;
-        for(int i=0;i<6;i++){
-            EntryPanel panel = new EntryPanel(this,Color.WHITE);
+    public WheelGUI(Wheel wheel){
+        this.wheel = wheel;
+        for(int i=0;i<wheel.size();i++){
+            EntryPanel panel = wheel.getEntry(i).getPanel();
+            panel.initListeners(this);
             entryPanels.add(panel);
-            panel.setText(i+"");
-            w = panel.getPreferredSize().width;
             LeftPanel.add(panel);
             adjustHeight(panel,true);
         }
+        if(wheel.size()==0){
+            EntryPanel panel = new EntryPanel(this);
+            panel.setWeight(1);
+            entryPanels.add(panel);
+            LeftPanel.add(panel);
+            adjustHeight(panel,true);
+        }
+        initWheelGUI();
+    }
+    public WheelGUI() {
+        wheel = new Wheel();
+        for(int i=0;i<6;i++){
+            EntryPanel panel = new EntryPanel(this);
+            panel.setWeight(1);
+            entryPanels.add(panel);
+            LeftPanel.add(panel);
+            adjustHeight(panel,true);
+        }
+        initWheelGUI();
+    }
 
+    private void initWheelGUI() {
+        setContentPane(MainPanel);
+        RightPanel = new WheelPanel(wheel);
+        MainPanel.setBackground(Color.black);
+        LeftPanel.setBackground(Color.darkGray);
         AddPanel = new JPanel();
-        AddPanel.setPreferredSize(new Dimension(w,90));
+        AddPanel.setPreferredSize(new Dimension(entryPanels.get(0).getPreferredSize().width,90));
         AddPanel.setOpaque(false);
         Add.setOpaque(false);
         Add.setBackground(new Color(60,63,65));
@@ -48,12 +65,12 @@ public class WheelGUI extends JFrame{
         AddPanel.add(Add);
         LeftPanel.add(AddPanel);
         adjustHeight(AddPanel,true);
-        
+
         final WheelGUI wThis = this;
         Add.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                EntryPanel panel = new EntryPanel(wThis,Color.WHITE);
+                EntryPanel panel = new EntryPanel(wThis);
                 wThis.entryPanels.add(panel);
                 LeftPanel.remove(AddPanel);
                 LeftPanel.add(panel);
@@ -100,6 +117,8 @@ public class WheelGUI extends JFrame{
             }
         });
     }
+
+
     private void quickSpin(){
         RightPanel.setSpinSpeed((new Random().nextDouble()*35+10)*(new Random().nextBoolean() ?  1: -1 ));
         spin();
@@ -121,10 +140,21 @@ public class WheelGUI extends JFrame{
     }
 
     public static void main(String[] args) {
-        WheelGUI frame = new WheelGUI();
+        Wheel wheel = load();
+        WheelGUI frame = wheel == null ? new WheelGUI() : new WheelGUI(wheel)  ;
+
         frame.setResizable(false);
         frame.pack();
         frame.setVisible(true);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                frame.save();
+            }
+        });
+
+        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
 
     public void updateWheel() {
@@ -144,5 +174,36 @@ public class WheelGUI extends JFrame{
         LeftPanel.revalidate();
         LeftPanel.repaint();
         updateWheel();
+    }
+    public static Wheel load(){
+        try {
+            FileInputStream file = new FileInputStream(FILE_NAME);
+            ObjectInputStream in = new ObjectInputStream(file);
+            return (Wheel) in.readObject();
+        } catch (FileNotFoundException e) {
+            //No File
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null,"Error on File Load");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void save() {
+        try {
+
+            FileOutputStream file = new FileOutputStream(FILE_NAME);
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            out.writeObject(wheel);
+            out.close();
+
+            file.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null,"Save Failed for Some Reason");
+        }
     }
 }

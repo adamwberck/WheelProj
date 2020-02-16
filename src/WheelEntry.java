@@ -1,7 +1,9 @@
-public class WheelEntry {
+import java.io.Serializable;
+
+public class WheelEntry implements Serializable {
     private Wheel wheel;
     private String name;
-    private int weight;
+    private double weight;
     private EntryPanel entryPanel;
 
     public int getAngle() {
@@ -10,7 +12,7 @@ public class WheelEntry {
 
     private int angle;
 
-    public WheelEntry(Wheel wheel,EntryPanel entryPanel,String name, int weight) {
+    public WheelEntry(Wheel wheel,EntryPanel entryPanel,String name, double weight) {
         this.entryPanel = entryPanel;
         this.name = name;
         this.weight = weight;
@@ -21,7 +23,7 @@ public class WheelEntry {
         this.angle = angle;
     }
 
-    public int getWeight() {
+    public double getWeight() {
         return weight;
     }
 
@@ -31,5 +33,9 @@ public class WheelEntry {
 
     public void notifyEntry() {
         entryPanel.notifyChosen();
+    }
+
+    public EntryPanel getPanel() {
+        return entryPanel;
     }
 }

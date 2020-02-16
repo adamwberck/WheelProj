@@ -7,17 +7,18 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
 public class EntryPanel extends JPanel {
-    private WheelGUI wheelGUI;
+    transient private WheelGUI wheelGUI;
     private JTextField tfName = new JTextField();
     private JTextField tfNum = new JTextField();
     private JButton sColor = new JButton();
     private Color color;
     private JButton bRemove = new JButton();
     private boolean isSet = false;
+    private boolean chosen = false;
     private String name;
-    private int weight;
+    private double weight;
 
-    public int getWeight() {
+    public double getWeight() {
         return weight;
     }
 
@@ -28,9 +29,8 @@ public class EntryPanel extends JPanel {
 
 
 
-    public EntryPanel(WheelGUI wheelGUI,Color c) {
+    public EntryPanel(WheelGUI wheelGUI) {
         this.wheelGUI = wheelGUI;
-        this.color = c;
 
         this.add(tfName);
         this.add(tfNum);
@@ -47,6 +47,10 @@ public class EntryPanel extends JPanel {
         bRemove.setBorder(BorderFactory.createEmptyBorder());
         bRemove.setBackground(new Color(60,63,65));
         bRemove.setSize(25,25);
+        initListeners(wheelGUI);
+    }
+
+    public void initListeners(WheelGUI wheelGUI) {
         final EntryPanel panelThis = this;
         bRemove.addActionListener(new ActionListener() {
             @Override
@@ -54,25 +58,13 @@ public class EntryPanel extends JPanel {
                 wheelGUI.removeEntry(panelThis);
             }
         });
-        /*
-        this.add(sColor);
-        sColor.setOpaque(true);
-        sColor.setBorder(BorderFactory.createEmptyBorder());
-        sColor.setSize(25,25);
-        BufferedImage bi = makeIconSquare(this.color);
-        sColor.setIcon(new ImageIcon(bi));
-        sColor.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JFrame frame = new JFrame();
-                frame.add(new JColorChooser(color));
-                frame.pack();
-                frame.setVisible(true);
-            }
-        });
-        */
+        initDocumentListeners(wheelGUI);
+    }
+
+    private void initDocumentListeners(WheelGUI wheelGUI) {
         tfName.getDocument().addDocumentListener(new EntryDocumentListener(tfName));
         tfNum.getDocument().addDocumentListener(new EntryDocumentListener(tfNum));
+        this.wheelGUI = wheelGUI;
     }
 
     private BufferedImage makeIconSquare(Color color) {
@@ -88,6 +80,7 @@ public class EntryPanel extends JPanel {
     }
 
     public void notifyChosen() {
+        chosen = true;
         tfName.setBackground(Color.YELLOW);
         tfNum.setBackground(Color.YELLOW);
         tfName.revalidate();
@@ -97,12 +90,17 @@ public class EntryPanel extends JPanel {
     }
 
     public void notifyUnChosen() {
+        chosen = false;
         tfName.setBackground(Color.WHITE);
         tfNum.setBackground(Color.WHITE);
         tfName.revalidate();
         tfName.repaint();
         tfNum.revalidate();
         tfNum.repaint();
+    }
+
+    public void setWeight(int i) {
+        tfNum.setText(""+i);
     }
 
     private class EntryDocumentListener implements DocumentListener{
@@ -130,7 +128,7 @@ public class EntryPanel extends JPanel {
         public void warn() {
             name = tfName.getText().trim();
             try {
-                weight = Integer.parseInt(tfNum.getText().trim());
+                weight = Double.parseDouble(tfNum.getText().trim());
                 isSet = true;
             }
             catch (NumberFormatException ignored){
@@ -146,6 +144,7 @@ public class EntryPanel extends JPanel {
                 isSet = true;
             }
             wheelGUI.updateWheel();
+            //wheelGUI.save();
         }
     }
 

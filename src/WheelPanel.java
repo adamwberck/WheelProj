@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class WheelPanel extends JPanel implements Runnable{
-    private static final Font tahoma = new Font("Tahoma", Font.BOLD, 13);
     private static final int SIZE = 450;
     private static final int BORDER_SIZE = (int) (SIZE/12.5);
     private final int INITIAL_X = 25;//(int) (SIZE/7.14287);
@@ -30,6 +29,7 @@ public class WheelPanel extends JPanel implements Runnable{
     public WheelPanel(Wheel wheel) {
         initWheelPanel();
         this.wheel = wheel;
+        spinAngle = wheel.getSpinAngle();
     }
 
     private void initWheelPanel() {
@@ -49,9 +49,8 @@ public class WheelPanel extends JPanel implements Runnable{
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         drawWheel(g);
-        if(chosen!=null && !chosen.getName().isEmpty()){
+        if(chosen!=null){
             chosen.notifyEntry();
-            //drawResult(g);
         }
     }
 
@@ -108,9 +107,27 @@ public class WheelPanel extends JPanel implements Runnable{
         BufferedImage bi  = new BufferedImage( SIZE/2,50,BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D g2 = bi.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g2.setFont(tahoma);
+
+
         g2.setColor(color);
-        g2.drawString(text,SIZE/2-getFontMetrics(tahoma).stringWidth(text)-SIZE/45,25);
+        int fontSize = 14;
+        Font tahoma = new Font("Tahoma", Font.BOLD, fontSize);
+        int width = getFontMetrics(tahoma).stringWidth(text);
+        int charStrip = 0;
+        while (width > SIZE/2 - SIZE/14){
+            if(fontSize>10) {
+                tahoma = new Font("Tahoma", Font.BOLD, --fontSize);
+            }else{
+                text = text.substring(0,text.length()-charStrip++-1);
+                if(text.charAt(text.length()-1)!='…'){
+                    text = text+"…";
+                }
+            }
+            width = getFontMetrics(tahoma).stringWidth(text);
+        }
+
+        g2.setFont(tahoma);
+        g2.drawString(text,SIZE/2 - width - SIZE/45,25);
         //g2.drawString(text, (int) (),SIZE/50);
         g2d.rotate(rads,ox,oy);
 
@@ -209,6 +226,7 @@ public class WheelPanel extends JPanel implements Runnable{
             if(spinSpeed == 0 && isSpinning){
                 chosen = getChosen();
             }
+            wheel.setSpinAngle(spinAngle);
 
             if (sleep < 0) {
                 sleep = 2;
@@ -236,23 +254,13 @@ public class WheelPanel extends JPanel implements Runnable{
                 double ey = newMouseY-oy; double ex = newMouseX-ox;
                 double sDir = Math.toDegrees(Math.atan(sy/sx));
                 double eDir = Math.toDegrees(Math.atan(ey/ex));
-                //System.out.println("s"+sDir);
-                //System.out.println("e"+eDir);
                 double speed;
                 speed = sDir - eDir;
-                if(Math.abs(speed)>90){
+                if(Math.abs(speed)>90){//dumb check
                     speed=0;
                 }
-
-                //System.out.println(C);
-                System.out.println(speed);
-                //System.out.println(b);
-                //System.out.println(c);
-                //spinSpeed = c/100;
                 int maxSpeed = 40 + new Random().nextInt(15);
-                spinSpeed = speed>0 ? Math.min(speed,maxSpeed) : Math.max(speed,-maxSpeed);
-                //spinAngle += spinSpeed;
-                //System.out.println("Deg " + Math.toDegrees(C*sign));
+                spinSpeed = speed > 0 ? Math.min(speed,maxSpeed) : Math.max(speed,-maxSpeed);
                 mouseX=newMouseX;
                 mouseY=newMouseY;
             }
