@@ -1,8 +1,16 @@
+import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
+import java.awt.image.ImageProducer;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -11,14 +19,15 @@ public class WheelGUI extends JFrame{
 
     private JPanel MainPanel;
     private JScrollPane ScrollPane;
-    private List<EntryPanel> entryPanels = new ArrayList(10);
+    private List<EntryPanel> entryPanels = new ArrayList<>(10);
     private JPanel LeftPanel;
     private WheelPanel RightPanel;
     private JPanel ParLeftPanel;
     private JButton Add = new JButton();
     private JPanel AddPanel;
 
-    private final static String FILE_NAME = "wheel_save.wheel";;
+    private final static String FOLDER_NAME = System.getenv("APPDATA") + "\\WheelJarSaves";
+    private final static String FILE_NAME = FOLDER_NAME + "\\wheel_save.wheel";
 
     public WheelGUI(Wheel wheel){
         this.wheel = wheel;
@@ -62,24 +71,21 @@ public class WheelGUI extends JFrame{
         Add.setOpaque(false);
         Add.setBackground(new Color(60,63,65));
         Add.setBorder(BorderFactory.createEmptyBorder());
-        Add.setIcon(new ImageIcon("res/add.png"));
+        Add.setIcon(new ImageIcon(WheelGUI.class.getResource("add.png")));
         AddPanel.add(Add);
         LeftPanel.add(AddPanel);
         adjustHeight(AddPanel,true);
 
         final WheelGUI wThis = this;
-        Add.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                EntryPanel panel = new EntryPanel(wThis);
-                wThis.entryPanels.add(panel);
-                LeftPanel.remove(AddPanel);
-                LeftPanel.add(panel);
-                adjustHeight(panel,true);
-                LeftPanel.add(AddPanel);
-                LeftPanel.revalidate();
-                LeftPanel.repaint();
-            }
+        Add.addActionListener(e -> {
+            EntryPanel panel = new EntryPanel(wThis);
+            wThis.entryPanels.add(panel);
+            LeftPanel.remove(AddPanel);
+            LeftPanel.add(panel);
+            adjustHeight(panel,true);
+            LeftPanel.add(AddPanel);
+            LeftPanel.revalidate();
+            LeftPanel.repaint();
         });
         RightPanel.setBackground(Color.gray);
         RightPanel.setPreferredSize(new Dimension(ParLeftPanel.getPreferredSize().height,
@@ -122,6 +128,7 @@ public class WheelGUI extends JFrame{
 
     private void quickSpin(){
         RightPanel.setSpinSpeed((new Random().nextDouble()*35+10)*(new Random().nextBoolean() ?  1: -1 ));
+        System.out.println(RightPanel.getSpinSpeed());
         spin();
     }
 
@@ -141,8 +148,16 @@ public class WheelGUI extends JFrame{
     }
 
     public static void main(String[] args) {
+        System.out.println(FILE_NAME);
         Wheel wheel = load();
         WheelGUI frame = wheel == null ? new WheelGUI() : new WheelGUI(wheel)  ;
+        frame.setTitle("Wheel");
+        try {
+            BufferedImage icon = ImageIO.read(WheelGUI.class.getResource("iconBIG.png"));
+            frame.setIconImage(icon);
+        } catch (IOException ignored) { }
+
+
 
         frame.setResizable(false);
         frame.pack();
@@ -186,7 +201,8 @@ public class WheelGUI extends JFrame{
             return null;
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,"Error on File Load");
+            JOptionPane.showMessageDialog(null,"Error on File Load"+
+                    Arrays.toString(e.getStackTrace()));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -195,16 +211,29 @@ public class WheelGUI extends JFrame{
 
     public void save() {
         try {
-
+            File folder = new File(FOLDER_NAME);
+            if(!folder.exists()){
+                //noinspection ResultOfMethodCallIgnored
+                folder.mkdir();
+            }
             FileOutputStream file = new FileOutputStream(FILE_NAME);
             ObjectOutputStream out = new ObjectOutputStream(file);
             out.writeObject(wheel);
             out.close();
-
             file.close();
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,"Save Failed for Some Reason");
+            try {
+                JOptionPane.showMessageDialog(null,"Save Failed See log.txt");
+                FileWriter file = new FileWriter("log.txt");
+                file.write(Arrays.toString(e.getStackTrace()));
+                file.close();
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null,"Save Failed and Log Failed " +
+                        "for Some Reason");
+                ex.printStackTrace();
+            }
+
         }
     }
 }

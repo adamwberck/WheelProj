@@ -4,6 +4,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.image.BufferedImage;
 
 public class EntryPanel extends JPanel {
@@ -43,7 +45,8 @@ public class EntryPanel extends JPanel {
         tfName.setFont(tahoma);
         tfNum.setFont(tahoma);
         bRemove.setOpaque(false);
-        bRemove.setIcon(new ImageIcon("res/close.png"));
+        bRemove.setFocusable(false);
+        bRemove.setIcon(new ImageIcon(WheelGUI.class.getResource("close.png")));
         bRemove.setBorder(BorderFactory.createEmptyBorder());
         bRemove.setBackground(new Color(60,63,65));
         bRemove.setSize(25,25);
@@ -52,12 +55,21 @@ public class EntryPanel extends JPanel {
 
     public void initListeners(WheelGUI wheelGUI) {
         final EntryPanel panelThis = this;
-        bRemove.addActionListener(new ActionListener() {
+        tfName.addFocusListener(new FocusAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                wheelGUI.removeEntry(panelThis);
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                tfName.setScrollOffset(0);
             }
         });
+        tfNum.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                tfNum.setScrollOffset(0);
+            }
+        });
+        bRemove.addActionListener(e -> wheelGUI.removeEntry(panelThis));
         initDocumentListeners(wheelGUI);
     }
 
@@ -126,6 +138,7 @@ public class EntryPanel extends JPanel {
         }
 
         public void warn() {
+            System.out.println(tfName.getScrollOffset());
             name = tfName.getText().trim();
             try {
                 weight = Double.parseDouble(tfNum.getText().trim());
@@ -144,7 +157,6 @@ public class EntryPanel extends JPanel {
                 isSet = true;
             }
             wheelGUI.updateWheel();
-            //wheelGUI.save();
         }
     }
 

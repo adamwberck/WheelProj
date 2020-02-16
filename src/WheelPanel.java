@@ -14,7 +14,7 @@ public class WheelPanel extends JPanel implements Runnable{
     private final int DELAY = 25;
 
     private int x,y;
-    private double spinAngle = -45;
+    private double spinAngle;
     private double spinSpeed = 0;
     private double spinFriction = 0.1;
     private Thread animator;
@@ -75,6 +75,9 @@ public class WheelPanel extends JPanel implements Runnable{
             WheelEntry entry = wheel.getEntry(i);
             int sAngle = wheel.getAngle(i);
             Color c = colors[ i % colors.length];
+            if(i == wheel.size()-1 && wheel.size()%colors.length == 1){
+                c = colors[ (i+1) % colors.length];
+            }
             g2D.setColor(c);
             g2D.fillArc(x+BORDER_SIZE/2, y+BORDER_SIZE/2, SIZE, SIZE, angle, sAngle);
 
@@ -207,6 +210,7 @@ public class WheelPanel extends JPanel implements Runnable{
 
 
 
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public void run() {
 
@@ -244,32 +248,40 @@ public class WheelPanel extends JPanel implements Runnable{
 
 
             if(grabbed){
-                isSpinning = false;
-                int newMouseX = MouseInfo.getPointerInfo().getLocation().x-getLocationOnScreen().x;
-                int newMouseY = MouseInfo.getPointerInfo().getLocation().y-getLocationOnScreen().y;
-                int ox = x+(SIZE)/2+BORDER_SIZE/2;
-                int oy = y+(SIZE)/2+BORDER_SIZE/2;
-
-                double sy =  mouseY-oy;double sx =  mouseX-ox;
-                double ey = newMouseY-oy; double ex = newMouseX-ox;
-                double sDir = Math.toDegrees(Math.atan(sy/sx));
-                double eDir = Math.toDegrees(Math.atan(ey/ex));
-                double speed;
-                speed = sDir - eDir;
-                if(Math.abs(speed)>90){//dumb check
-                    speed=0;
-                }
-                int maxSpeed = 40 + new Random().nextInt(15);
-                spinSpeed = speed > 0 ? Math.min(speed,maxSpeed) : Math.max(speed,-maxSpeed);
-                mouseX=newMouseX;
-                mouseY=newMouseY;
+                handleGrabbed();
             }
-            else if(Math.abs(spinSpeed)>10){
+            else if(Math.abs(spinSpeed)>9){
                 isSpinning = true;
             }
 
             beforeTime = System.currentTimeMillis();
         }
+    }
+
+    private void handleGrabbed() {
+        isSpinning = false;
+        int newMouseX = MouseInfo.getPointerInfo().getLocation().x-getLocationOnScreen().x;
+        int newMouseY = MouseInfo.getPointerInfo().getLocation().y-getLocationOnScreen().y;
+        int ox = x+(SIZE)/2+BORDER_SIZE/2;
+        int oy = y+(SIZE)/2+BORDER_SIZE/2;
+
+        double sy =  mouseY-oy;
+        double sx =  mouseX-ox;
+        double ey = newMouseY-oy;
+        double ex = newMouseX-ox;
+        double sDir = Math.toDegrees(Math.atan(sy/sx));
+        double eDir = Math.toDegrees(Math.atan(ey/ex));
+        double speed;
+        speed = sDir - eDir;
+        if(Math.abs(speed)>90){//dumb check
+            speed=0;
+        }
+        System.out.println(speed);
+        double maxSpeed = 30 + new Random().nextDouble()*15;
+        spinSpeed = speed > 0 ? Math.min(speed,maxSpeed) : Math.max(speed,-maxSpeed);
+        System.out.println(spinSpeed);
+        mouseX=newMouseX;
+        mouseY=newMouseY;
     }
 
     private WheelEntry getChosen() {
