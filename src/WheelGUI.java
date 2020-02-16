@@ -47,6 +47,7 @@ public class WheelGUI extends JFrame{
             LeftPanel.add(panel);
             adjustHeight(panel,true);
         }
+        updateWheel();
         initWheelGUI();
     }
 
