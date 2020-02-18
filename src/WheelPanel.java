@@ -1,3 +1,6 @@
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -16,7 +19,7 @@ public class WheelPanel extends JPanel implements Runnable{
     private int x,y;
     private double spinAngle;
     private double spinSpeed = 0;
-    private double spinFriction = 0.1;
+    final public static double SPIN_FRICTION = 0.025;
     private Thread animator;
     private Wheel wheel;
     private boolean isSpinning;
@@ -25,11 +28,17 @@ public class WheelPanel extends JPanel implements Runnable{
     private boolean grabbed;
     private int mouseX;
     private int mouseY;
+    private WheelEntry lastEntry;
+    final public static double MIN_SPIN_RATE = .225;
+    final public static double MIN_SPIN_CONST = 4.25-MIN_SPIN_RATE;
+    final public static int MAX_SPEED = 35;
+
 
     public WheelPanel(Wheel wheel) {
         initWheelPanel();
         this.wheel = wheel;
         spinAngle = wheel.getSpinAngle();
+        lastEntry = getChosen();
     }
 
     private void initWheelPanel() {
@@ -87,7 +96,7 @@ public class WheelPanel extends JPanel implements Runnable{
 
             rads = Math.toRadians(-angle - sAngle*.5 );
             if(entry.getWeight()>0) {
-                drawText(g2D, entry.getName(), ox, oy, rads, Color.BLACK);
+                drawText(g2D, entry.getName(), ox, oy, rads, Color.BLACK,sAngle);
             }
 
             angle += sAngle;
@@ -105,7 +114,7 @@ public class WheelPanel extends JPanel implements Runnable{
         drawTriangle(g2D);
     }
 
-    private void drawText(Graphics2D g2d,String text, int ox, int oy, double rads,Color color) {
+    private void drawText(Graphics2D g2d, String text, int ox, int oy, double rads, Color color, int angle) {
         AffineTransform orig = g2d.getTransform();
         BufferedImage bi  = new BufferedImage( SIZE/2,50,BufferedImage.TYPE_4BYTE_ABGR);
         Graphics2D g2 = bi.createGraphics();
@@ -113,14 +122,15 @@ public class WheelPanel extends JPanel implements Runnable{
 
 
         g2.setColor(color);
-        int fontSize = 14;
+        int fontSize = angle<15 ? 10 : 14;
         Font tahoma = new Font("Tahoma", Font.BOLD, fontSize);
         int width = getFontMetrics(tahoma).stringWidth(text);
         int charStrip = 0;
+
         while (width > SIZE/2 - SIZE/14){
-            if(fontSize>10) {
+            if(fontSize>10) {//reduce size
                 tahoma = new Font("Tahoma", Font.BOLD, --fontSize);
-            }else{
+            }else{//reduce string
                 text = text.substring(0,text.length()-charStrip++-1);
                 if(text.charAt(text.length()-1)!='…'){
                     text = text+"…";
@@ -225,10 +235,13 @@ public class WheelPanel extends JPanel implements Runnable{
             timeDiff = System.currentTimeMillis() - beforeTime;
             sleep = DELAY - timeDiff;
             spinAngle += spinSpeed;
-            spinAngle = spinAngle % 360;
-            spinSpeed = spinSpeed>0 ? Math.max(0, spinSpeed-spinFriction) : Math.min(0, spinSpeed+spinFriction) ;
+            if(Math.abs(spinAngle)>360){
+                spinAngle-=360*Math.signum(spinAngle);
+            }
+            spinSpeed = spinSpeed > 0 ? Math.max(0, spinSpeed-SPIN_FRICTION) : Math.min(0, spinSpeed+SPIN_FRICTION);
             if(spinSpeed == 0 && isSpinning){
                 chosen = getChosen();
+                isSpinning = false;
             }
             wheel.setSpinAngle(spinAngle);
 
@@ -250,11 +263,48 @@ public class WheelPanel extends JPanel implements Runnable{
             if(grabbed){
                 handleGrabbed();
             }
-            else if(Math.abs(spinSpeed)>9){
+            else if(Math.abs(spinSpeed) > MIN_SPIN_RATE *wheel.drawnSize()+MIN_SPIN_CONST){
                 isSpinning = true;
             }
 
+            if(Math.abs(spinSpeed)>0){
+                var entry = getChosen();
+                if(lastEntry!=entry){
+                    if(!grabbed) {
+                        System.out.println("hit "+spinSpeed);
+                        if (Math.abs(spinSpeed) < .8) {
+                            spinSpeed *= -1;
+                            spinAngle += Math.signum(spinSpeed);
+                            spinAngle = spinAngle % 360;
+                            entry = getChosen();
+                        }
+                        spinSpeed -= .25 * Math.signum(spinSpeed);
+                    }
+                    lastEntry = entry;
+                    playSound("hit2.wav",wheel.isSoundOn());
+                }
+            }
+
+
             beforeTime = System.currentTimeMillis();
+        }
+    }
+
+    public static synchronized void playSound(final String url,boolean isSoundOn) {
+        if(isSoundOn) {
+            // The wrapper thread is unnecessary, unless it blocks on the
+            // Clip finishing; see comments.
+            new Thread(() -> {
+                try {
+                    Clip clip = AudioSystem.getClip();
+                    AudioInputStream inputStream = AudioSystem.getAudioInputStream(
+                            WheelGUI.class.getResourceAsStream(url));
+                    clip.open(inputStream);
+                    clip.start();
+                } catch (Exception e) {
+                    System.err.println(e.getMessage());
+                }
+            }).start();
         }
     }
 
@@ -277,7 +327,7 @@ public class WheelPanel extends JPanel implements Runnable{
             speed=0;
         }
         System.out.println(speed);
-        double maxSpeed = 30 + new Random().nextDouble()*15;
+        double maxSpeed = (MAX_SPEED >> 2)*3 + new Random().nextDouble()*(MAX_SPEED >> 2);
         spinSpeed = speed > 0 ? Math.min(speed,maxSpeed) : Math.max(speed,-maxSpeed);
         System.out.println(spinSpeed);
         mouseX=newMouseX;
@@ -291,7 +341,6 @@ public class WheelPanel extends JPanel implements Runnable{
             WheelEntry entry = wheel.getEntry(i);
             testAngle+= entry.getAngle();
             if(testAngle>trueAngle){
-                isSpinning=false;
                 resultY=INITIAL_RY;
                 return entry;
             }

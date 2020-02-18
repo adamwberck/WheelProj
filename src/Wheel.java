@@ -6,6 +6,8 @@ import java.util.List;
 public class Wheel implements Serializable {
     private List<WheelEntry> entries = new ArrayList(10);
     private double spinAngle = -45;
+    private static final long serialVersionUID = 0xFDADABEC;
+    private boolean soundOn = false;
 
     public void clearEntries() {
         entries.clear();
@@ -35,6 +37,30 @@ public class Wheel implements Serializable {
     }
 
     public int getAngle(int i){
+        return entries.get(i).getAngle();
+    }
+
+    public double getTotal() {
+        return total*1.0;
+    }
+
+    public void setSpinAngle(double spinAngle) {
+        this.spinAngle = spinAngle;
+    }
+
+    public double getSpinAngle() {
+        return spinAngle;
+    }
+
+    public int drawnSize(){
+        int total = 0;
+        for(var entry : entries){
+            total += entry.getWeight() > 0 ? 1 : 0;
+        }
+        return total;
+    }
+
+    public void updateAngles() {
         int totalAngle = 0;
         for(WheelEntry entry : entries){
             int angle = (int) (((entry.getWeight()*1.0) / (total*1.0))*360);
@@ -51,18 +77,13 @@ public class Wheel implements Serializable {
             totalAngle++;
             j=(j+1) % entries.size();
         }
-        return entries.get(i).getAngle();
     }
 
-    public double getTotal() {
-        return total*1.0;
+    public boolean isSoundOn() {
+        return soundOn;
     }
 
-    public void setSpinAngle(double spinAngle) {
-        this.spinAngle = spinAngle;
-    }
-
-    public double getSpinAngle() {
-        return spinAngle;
+    public void setSoundOn(boolean soundOn) {
+        this.soundOn = soundOn;
     }
 }

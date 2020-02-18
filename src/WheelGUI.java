@@ -1,13 +1,8 @@
 import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
-import java.awt.image.ImageProducer;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +21,7 @@ public class WheelGUI extends JFrame{
     private JButton Add = new JButton();
     private JPanel AddPanel;
 
-    private final static String FOLDER_NAME = System.getenv("APPDATA") + "\\WheelJarSaves";
+    private final static String FOLDER_NAME = System.getProperty("user.home") + "\\WheelJarSaves";
     private final static String FILE_NAME = FOLDER_NAME + "\\wheel_save.wheel";
 
     public WheelGUI(Wheel wheel){
@@ -60,6 +55,10 @@ public class WheelGUI extends JFrame{
         initWheelGUI();
     }
 
+    public boolean isSoundOn() {
+        return wheel.isSoundOn();
+    }
+
     private void initWheelGUI() {
         setContentPane(MainPanel);
         RightPanel = new WheelPanel(wheel);
@@ -78,7 +77,7 @@ public class WheelGUI extends JFrame{
 
         final WheelGUI wThis = this;
         Add.addActionListener(e -> {
-            EntryPanel panel = new EntryPanel(wThis);
+            var panel = new EntryPanel(wThis);
             wThis.entryPanels.add(panel);
             LeftPanel.remove(AddPanel);
             LeftPanel.add(panel);
@@ -127,7 +126,11 @@ public class WheelGUI extends JFrame{
 
 
     private void quickSpin(){
-        RightPanel.setSpinSpeed((new Random().nextDouble()*35+10)*(new Random().nextBoolean() ?  1: -1 ));
+        var r = new Random();
+        var minSpeed = 1.5 *
+                (WheelPanel.MIN_SPIN_RATE *wheel.drawnSize()+WheelPanel.SPIN_FRICTION  + WheelPanel.MIN_SPIN_CONST);
+        RightPanel.setSpinSpeed((r.nextDouble()*(WheelPanel.MAX_SPEED-minSpeed)+minSpeed)
+                * (r.nextBoolean() ?  1: -1 ));
         System.out.println(RightPanel.getSpinSpeed());
         spin();
     }
@@ -142,15 +145,15 @@ public class WheelGUI extends JFrame{
 
     private void adjustHeight(Component panel,boolean increase) {
         int height = panel.getPreferredSize().height;
-        Dimension d = LeftPanel.getPreferredSize();
+        var d = LeftPanel.getPreferredSize();
         int dir = increase ? 1 : -1;
         LeftPanel.setPreferredSize(new Dimension(d.width,d.height+height*dir));
     }
 
     public static void main(String[] args) {
         System.out.println(FILE_NAME);
-        Wheel wheel = load();
-        WheelGUI frame = wheel == null ? new WheelGUI() : new WheelGUI(wheel)  ;
+        Wheel loadWheel = load();
+        WheelGUI frame = loadWheel == null ? new WheelGUI() : new WheelGUI(loadWheel)  ;
         frame.setTitle("Wheel");
         try {
             BufferedImage icon = ImageIO.read(WheelGUI.class.getResource("iconBIG.png"));
@@ -169,8 +172,28 @@ public class WheelGUI extends JFrame{
                 frame.save();
             }
         });
+        final var fThis = frame;
+        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(new KeyEventDispatcher() {
+            private boolean controlDown = false;
 
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent e) {
+                if(e.isControlDown() && e.getID()==KeyEvent.KEY_PRESSED){
+                    controlDown = true;
+                }else if(e.getID()==KeyEvent.KEY_RELEASED){
+                    controlDown = false;
+                }
+                if(controlDown && e.getKeyCode()==KeyEvent.VK_M && e.getID()==KeyEvent.KEY_PRESSED){
+                    fThis.setSetSoundOn(!fThis.isSoundOn());
+                }
+                return false;
+            }
+        });
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    private void setSetSoundOn(boolean b) {
+        wheel.setSoundOn(b);
     }
 
     public void updateWheel() {
@@ -180,6 +203,9 @@ public class WheelGUI extends JFrame{
             if(panel.isSet()){
                 wheel.addEntry(panel,panel.getName(),panel.getWeight());
             }
+        }
+        if(wheel.size()>0) {
+            wheel.updateAngles();
         }
     }
 
@@ -201,8 +227,7 @@ public class WheelGUI extends JFrame{
             return null;
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null,"Error on File Load"+
-                    Arrays.toString(e.getStackTrace()));
+            JOptionPane.showMessageDialog(null,"Error on File Load");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }

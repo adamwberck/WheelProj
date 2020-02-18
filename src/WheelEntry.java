@@ -5,6 +5,7 @@ public class WheelEntry implements Serializable {
     private String name;
     private double weight;
     private EntryPanel entryPanel;
+    private static final long serialVersionUID = 0xADABEC95;
 
     public int getAngle() {
         return angle;
@@ -38,4 +39,5 @@ public class WheelEntry implements Serializable {
     public EntryPanel getPanel() {
         return entryPanel;
     }
+
 }
