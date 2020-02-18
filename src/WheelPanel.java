@@ -1,5 +1,4 @@
-import com.sun.tools.javac.Main;
-
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -7,6 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -31,6 +32,10 @@ public class WheelPanel extends JPanel implements Runnable{
     private int mouseX;
     private int mouseY;
     private WheelEntry lastEntry;
+
+    private BufferedImage soundOn;
+    private BufferedImage soundOff;
+
     final public static double MIN_SPIN_RATE = .225;
     final public static double MIN_SPIN_CONST = 4.25-MIN_SPIN_RATE;
     final public static int MAX_SPEED = 35;
@@ -41,6 +46,13 @@ public class WheelPanel extends JPanel implements Runnable{
         this.wheel = wheel;
         spinAngle = wheel.getSpinAngle();
         lastEntry = getChosen();
+
+        try {
+            soundOn = ImageIO.read((WheelGUI.class.getResource("SoundOn.png")));
+            soundOff = ImageIO.read((WheelGUI.class.getResource("SoundOff.png")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initWheelPanel() {
@@ -63,11 +75,22 @@ public class WheelPanel extends JPanel implements Runnable{
         if(chosen!=null){
             chosen.notifyEntry();
         }
+        try {
+            drawSound(g);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void drawSound(Graphics g) throws IOException {
+        var g2D = (Graphics2D) g;
+        var image = wheel.isSoundOn() ? soundOn : soundOff;
+        g2D.drawImage(image,SIZE+BORDER_SIZE/2,SIZE/25, this);
     }
 
 
     private void drawWheel(Graphics g) {
-        Graphics2D g2D = (Graphics2D) g;
+        var g2D = (Graphics2D) g;
         g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
         g2D.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
         g2D.setRenderingHint(RenderingHints.KEY_RESOLUTION_VARIANT,RenderingHints.VALUE_RESOLUTION_VARIANT_DPI_FIT);

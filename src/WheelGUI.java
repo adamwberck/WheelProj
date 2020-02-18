@@ -21,8 +21,9 @@ public class WheelGUI extends JFrame{
     private JButton Add = new JButton();
     private JPanel AddPanel;
 
-    private final static String FOLDER_NAME = System.getProperty("user.home") + "\\WheelJarSaves";
-    private final static String FILE_NAME = FOLDER_NAME + "\\wheel_save.wheel";
+    public final static String FOLDER_NAME = System.getProperty("user.home") + "\\WheelJarSaves";
+    public final static String FILE_NAME = FOLDER_NAME + "\\wheel_save.wheel";
+
 
     public WheelGUI(Wheel wheel){
         this.wheel = wheel;
@@ -95,6 +96,11 @@ public class WheelGUI extends JFrame{
 
             @Override
             public void mouseClicked(MouseEvent e) {
+                System.out.println(e.getX()+" "+e.getY());
+                int x = e.getX(), y = e.getY();
+                if(x > 472 && x <526 && y>32 && y<73){
+                    wheel.setSoundOn(!wheel.isSoundOn());
+                }
             }
 
             @Override
@@ -152,8 +158,9 @@ public class WheelGUI extends JFrame{
 
     public static void main(String[] args) {
         System.out.println(FILE_NAME);
-        Wheel loadWheel = load();
+        Wheel loadWheel = load(FILE_NAME);
         WheelGUI frame = loadWheel == null ? new WheelGUI() : new WheelGUI(loadWheel)  ;
+        frame.setJMenuBar(frame.createMenuBar());
         frame.setTitle("Wheel");
         try {
             BufferedImage icon = ImageIO.read(WheelGUI.class.getResource("iconBIG.png"));
@@ -169,7 +176,9 @@ public class WheelGUI extends JFrame{
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
-                frame.save();
+                if(frame.wheel.isAutoSaveOn()) {
+                    frame.save();
+                }
             }
         });
         final var fThis = frame;
@@ -190,6 +199,67 @@ public class WheelGUI extends JFrame{
             }
         });
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    private JMenuBar createMenuBar() {
+        var menuBar = new JMenuBar();
+        var fileMenu = new JMenu("File");
+        fileMenu.setMnemonic(KeyEvent.VK_F);
+        menuBar.add(fileMenu);
+
+        final var autoSaveItem = new JMenuItem(getAutoSaveString(wheel));
+        autoSaveItem.addActionListener(e -> {
+            wheel.setAutoSaveOn(!wheel.isAutoSaveOn());
+            autoSaveItem.setText(getAutoSaveString(wheel));
+        });
+
+        var saveItem = new JMenuItem("Save");
+        saveItem.addActionListener(e -> {
+            save();
+        });
+        var saveAsItem = new JMenuItem("Save As");
+        saveAsItem.addActionListener(e -> { showSaveLoadDialog(true); });
+
+        var loadItem = new JMenuItem("Load");
+        loadItem.addActionListener(e -> showSaveLoadDialog(false));
+
+
+        fileMenu.add(autoSaveItem);
+        fileMenu.add(saveItem);
+        fileMenu.add(saveAsItem);
+        fileMenu.add(loadItem);
+
+        return menuBar;
+    }
+
+    private void showSaveLoadDialog(boolean isSave) {
+        var parentFrame = new JFrame("Test");
+        //location?
+        var fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Choose Save location");
+        fileChooser.setCurrentDirectory(new File(wheel.getFolderLocation()));
+        int userSelection;
+        if(isSave) {
+            userSelection = fileChooser.showSaveDialog(parentFrame);
+        } else{
+            userSelection = fileChooser.showOpenDialog(parentFrame);
+        }
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            wheel.setSaveLocation(file.getAbsolutePath());
+            if (isSave) {
+                save();
+            } else {
+                wheel = load(wheel.getSaveLocation());
+                //TODO fix load
+            }
+        }else if(userSelection == JFileChooser.CANCEL_OPTION){
+        }
+        parentFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    }
+
+    private static String getAutoSaveString(Wheel wheel) {
+        return "Auto Save " + (wheel.isAutoSaveOn() ? "On" : "Off");
     }
 
     private void setSetSoundOn(boolean b) {
@@ -217,9 +287,9 @@ public class WheelGUI extends JFrame{
         LeftPanel.repaint();
         updateWheel();
     }
-    public static Wheel load(){
+    public static Wheel load(String fileLocation){
         try {
-            FileInputStream file = new FileInputStream(FILE_NAME);
+            FileInputStream file = new FileInputStream(fileLocation);
             ObjectInputStream in = new ObjectInputStream(file);
             return (Wheel) in.readObject();
         } catch (FileNotFoundException e) {
@@ -236,12 +306,12 @@ public class WheelGUI extends JFrame{
 
     public void save() {
         try {
-            File folder = new File(FOLDER_NAME);
+            File folder = new File(wheel.getFolderLocation());
             if(!folder.exists()){
                 //noinspection ResultOfMethodCallIgnored
                 folder.mkdir();
             }
-            FileOutputStream file = new FileOutputStream(FILE_NAME);
+            FileOutputStream file = new FileOutputStream(wheel.getSaveLocation());
             ObjectOutputStream out = new ObjectOutputStream(file);
             out.writeObject(wheel);
             out.close();

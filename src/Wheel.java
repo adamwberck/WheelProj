@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +9,8 @@ public class Wheel implements Serializable {
     private double spinAngle = -45;
     private static final long serialVersionUID = 0xFDADABEC;
     private boolean soundOn = false;
+    private boolean autoSaveOn = true;
+    private String saveLocation = WheelGUI.FILE_NAME;
 
     public void clearEntries() {
         entries.clear();
@@ -85,5 +88,25 @@ public class Wheel implements Serializable {
 
     public void setSoundOn(boolean soundOn) {
         this.soundOn = soundOn;
+    }
+
+    public boolean isAutoSaveOn() {
+        return autoSaveOn;
+    }
+
+    public void setAutoSaveOn(boolean autoSaveOn) {
+        this.autoSaveOn = autoSaveOn;
+    }
+
+    public String getSaveLocation() {
+        return saveLocation;
+    }
+
+    public void setSaveLocation(String saveLocation) {
+        this.saveLocation = saveLocation;
+    }
+
+    public String getFolderLocation() {
+        return new File(saveLocation).getParent();
     }
 }
