@@ -1,3 +1,5 @@
+import com.sun.tools.javac.Main;
+
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -298,7 +300,7 @@ public class WheelPanel extends JPanel implements Runnable{
                 try {
                     Clip clip = AudioSystem.getClip();
                     AudioInputStream inputStream = AudioSystem.getAudioInputStream(
-                            WheelGUI.class.getResourceAsStream(url));
+                            WheelGUI.class.getResource(url));
                     clip.open(inputStream);
                     clip.start();
                 } catch (Exception e) {
