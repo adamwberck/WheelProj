@@ -21,26 +21,16 @@ public class WheelGUI extends JFrame{
     private JButton Add = new JButton();
     private JPanel AddPanel;
 
+    public final static String PREF_NAME = "SAVE_LOC";
     public final static String FOLDER_NAME = System.getProperty("user.home") + "\\WheelJarSaves";
     public final static String FILE_NAME = FOLDER_NAME + "\\wheel_save.wheel";
+    public final static String PREF_FOLDER = System.getProperty("user.home") + "\\WheelPrefs";
+    public final static String PREF_FILE = PREF_FOLDER + "\\wheel.pref";
 
 
     public WheelGUI(Wheel wheel){
         this.wheel = wheel;
-        for(int i=0;i<wheel.size();i++){
-            EntryPanel panel = wheel.getEntry(i).getPanel();
-            panel.initListeners(this);
-            entryPanels.add(panel);
-            LeftPanel.add(panel);
-            adjustHeight(panel,true);
-        }
-        if(wheel.size()==0){
-            EntryPanel panel = new EntryPanel(this);
-            panel.setWeight(1);
-            entryPanels.add(panel);
-            LeftPanel.add(panel);
-            adjustHeight(panel,true);
-        }
+        setLeftPanel();
         initWheelGUI();
     }
     public WheelGUI() {
@@ -105,12 +95,15 @@ public class WheelGUI extends JFrame{
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if(SwingUtilities.isLeftMouseButton(e)) {
-                    spin();
-                    RightPanel.setGrabbed(true);
-                    RightPanel.setMousePos(e.getX(), e.getY());
-                }else if(SwingUtilities.isRightMouseButton(e)){
-                    quickSpin();
+                int x = e.getX(), y = e.getY();
+                if(!(x > 472 && x <526 && y>32 && y<73)) {
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        spin();
+                        RightPanel.setGrabbed(true);
+                        RightPanel.setMousePos(e.getX(), e.getY());
+                    } else if (SwingUtilities.isRightMouseButton(e)) {
+                        quickSpin();
+                    }
                 }
             }
 
@@ -150,18 +143,26 @@ public class WheelGUI extends JFrame{
     }
 
     private void adjustHeight(Component panel,boolean increase) {
+        System.out.println(LeftPanel.getPreferredSize().height);
         int height = panel.getPreferredSize().height;
         var d = LeftPanel.getPreferredSize();
         int dir = increase ? 1 : -1;
         LeftPanel.setPreferredSize(new Dimension(d.width,d.height+height*dir));
+        System.out.println(LeftPanel.getPreferredSize().height);
     }
 
     public static void main(String[] args) {
         System.out.println(FILE_NAME);
-        Wheel loadWheel = load(FILE_NAME);
-        WheelGUI frame = loadWheel == null ? new WheelGUI() : new WheelGUI(loadWheel)  ;
+        Wheel loadWheel = null;
+        try {
+            loadWheel = load(getFileNameFromFile());
+        } catch (StreamCorruptedException i) {
+            showWrongFileError();
+        }
+        var frame = loadWheel == null ? new WheelGUI() : new WheelGUI(loadWheel)  ;
         frame.setJMenuBar(frame.createMenuBar());
-        frame.setTitle("Wheel");
+        frame.setTitle("Wheel - " + new File(frame.wheel.getSaveLocation()).getName());
+
         try {
             BufferedImage icon = ImageIO.read(WheelGUI.class.getResource("iconBIG.png"));
             frame.setIconImage(icon);
@@ -195,10 +196,27 @@ public class WheelGUI extends JFrame{
                 if(controlDown && e.getKeyCode()==KeyEvent.VK_M && e.getID()==KeyEvent.KEY_PRESSED){
                     fThis.setSetSoundOn(!fThis.isSoundOn());
                 }
+                if(controlDown && e.getKeyCode()==KeyEvent.VK_S && e.getID()==KeyEvent.KEY_PRESSED){
+                    fThis.save();
+                }
                 return false;
             }
         });
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+    }
+
+    private static String getFileNameFromFile() {
+        try {
+            if(!new File(WheelGUI.PREF_FOLDER).exists()){
+                new File(WheelGUI.PREF_FOLDER).mkdir();
+            }
+            return (String) new ObjectInputStream(new FileInputStream(WheelGUI.PREF_FILE)).readObject();
+        } catch (FileNotFoundException fe){
+            return FILE_NAME;
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private JMenuBar createMenuBar() {
@@ -218,10 +236,10 @@ public class WheelGUI extends JFrame{
             save();
         });
         var saveAsItem = new JMenuItem("Save As");
-        saveAsItem.addActionListener(e -> { showSaveLoadDialog(true); });
+        saveAsItem.addActionListener(e -> { showSaveLoadDialog(true,autoSaveItem); });
 
         var loadItem = new JMenuItem("Load");
-        loadItem.addActionListener(e -> showSaveLoadDialog(false));
+        loadItem.addActionListener(e -> showSaveLoadDialog(false,autoSaveItem));
 
 
         fileMenu.add(autoSaveItem);
@@ -232,33 +250,76 @@ public class WheelGUI extends JFrame{
         return menuBar;
     }
 
-    private void showSaveLoadDialog(boolean isSave) {
-        var parentFrame = new JFrame("Test");
+    private void showSaveLoadDialog(boolean isSave,JMenuItem autoSaveItem) {
         //location?
         var fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Choose Save location");
+        var str = isSave ? "save" : "load";
+        fileChooser.setDialogTitle("Choose "+str+" location:");
         fileChooser.setCurrentDirectory(new File(wheel.getFolderLocation()));
         int userSelection;
         if(isSave) {
-            userSelection = fileChooser.showSaveDialog(parentFrame);
+            userSelection = fileChooser.showSaveDialog(this);
         } else{
-            userSelection = fileChooser.showOpenDialog(parentFrame);
+            userSelection = fileChooser.showOpenDialog(this);
         }
         if (userSelection == JFileChooser.APPROVE_OPTION) {
+            if( !isSave && wheel.isAutoSaveOn()) {
+                save();
+            }
             File file = fileChooser.getSelectedFile();
+            String oldLoc = wheel.getSaveLocation();
             wheel.setSaveLocation(file.getAbsolutePath());
+            setTitle("Wheel - " + new File(wheel.getSaveLocation()).getName());
             if (isSave) {
                 save();
             } else {
-                wheel = load(wheel.getSaveLocation());
-                //TODO fix load
+                var loc = wheel.getSaveLocation();
+                wheel.setSaveLocation(loc);
+                setTitle("Wheel - " + new File(wheel.getSaveLocation()).getName());
+                try {
+                    wheel = load(loc);
+                    autoSaveItem.setText(getAutoSaveString(wheel));
+                    LeftPanel.removeAll();
+                    var w = entryPanels.get(0).getPreferredSize().width;
+                    entryPanels.clear();
+                    LeftPanel.setPreferredSize(new Dimension(w,10));
+                    setLeftPanel();
+                    LeftPanel.add(AddPanel);
+                    adjustHeight(AddPanel,true);
+                    LeftPanel.revalidate();
+                    RightPanel.setWheel(wheel);
+                    updateWheel();
+                }catch(ClassCastException | NullPointerException | StreamCorruptedException e){
+                    wheel.setSaveLocation(oldLoc);
+                    setTitle("Wheel - " + new File(wheel.getSaveLocation()).getName());
+                    showWrongFileError();
+                }
             }
-        }else if(userSelection == JFileChooser.CANCEL_OPTION){
         }
-        parentFrame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
-    private static String getAutoSaveString(Wheel wheel) {
+    private static void showWrongFileError() {
+        JOptionPane.showMessageDialog(null,"Wrong File or Corrupted");
+    }
+
+    private void setLeftPanel() {
+        for(int i=0;i<wheel.size();i++){
+            EntryPanel panel = wheel.getEntry(i).getPanel();
+            panel.initListeners(this);
+            entryPanels.add(panel);
+            LeftPanel.add(panel);
+            adjustHeight(panel,true);
+        }
+        if(wheel.size()==0){
+            EntryPanel panel = new EntryPanel(this);
+            panel.setWeight(1);
+            entryPanels.add(panel);
+            LeftPanel.add(panel);
+            adjustHeight(panel,true);
+        }
+    }
+
+    private static String getAutoSaveString(Wheel wheel) throws NullPointerException{
         return "Auto Save " + (wheel.isAutoSaveOn() ? "On" : "Off");
     }
 
@@ -287,7 +348,7 @@ public class WheelGUI extends JFrame{
         LeftPanel.repaint();
         updateWheel();
     }
-    public static Wheel load(String fileLocation){
+    public static Wheel load(String fileLocation) throws ClassCastException, StreamCorruptedException{
         try {
             FileInputStream file = new FileInputStream(fileLocation);
             ObjectInputStream in = new ObjectInputStream(file);
@@ -295,6 +356,8 @@ public class WheelGUI extends JFrame{
         } catch (FileNotFoundException e) {
             //No File
             return null;
+        }catch(StreamCorruptedException e){
+            throw  e;
         } catch (IOException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null,"Error on File Load");

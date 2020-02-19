@@ -1,6 +1,5 @@
 import java.awt.*;
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,6 +103,11 @@ public class Wheel implements Serializable {
 
     public void setSaveLocation(String saveLocation) {
         this.saveLocation = saveLocation;
+        try {
+            new ObjectOutputStream(new FileOutputStream(WheelGUI.PREF_FILE)).writeObject(getSaveLocation());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public String getFolderLocation() {

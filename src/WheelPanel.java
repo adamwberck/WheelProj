@@ -224,6 +224,11 @@ public class WheelPanel extends JPanel implements Runnable{
         this.mouseY = y;
     }
 
+    public void setWheel(Wheel wheel) {
+        this.wheel = wheel;
+        spinAngle = wheel.getSpinAngle();
+    }
+
     private static class Line{
         int i;int i1;int i2; int i3;
 
